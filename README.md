@@ -20,7 +20,7 @@ Additionnally, we provide a Detectron2 wrapper in the d2/ folder. See the readme
 For details see [End-to-End Object Detection with Transformers](https://ai.facebook.com/research/publications/end-to-end-object-detection-with-transformers) by Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko.
 
 The license for this code is at "https://github.com/facebookresearch/detr".
-
+For more information about DETR, please refer to the site above.
 
 ## Evaluation
 To evaluate DETR R50 on COCO val5k with a single GPU run:
@@ -29,6 +29,8 @@ python main.py
 ```
 
 Evaluation results are saved in the 'results' folder.
+
+In the 'samples' folder, there are a total of 8 data, one normal slice and one tumor slice for 4 patients.
 
 For the boxes in the image, the red box means ground-truth and the blue box means predict.
 
