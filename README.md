@@ -28,6 +28,8 @@ To evaluate DETR R50 on COCO val5k with a single GPU run:
 python main.py 
 ```
 
+Evaluation results are saved in the 'results' folder.
+
 For the boxes in the image, the red box means ground-truth and the blue box means predict.
 
 # Notebooks
