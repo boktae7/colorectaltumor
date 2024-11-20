@@ -25,7 +25,7 @@ For more information about DETR, please refer to the site above.
 ## Evaluation
 To evaluate DETR R50 on COCO val5k with a single GPU run:
 ```
-python main.py 
+python test.py 
 ```
 
 Evaluation results are saved in the 'results' folder.
