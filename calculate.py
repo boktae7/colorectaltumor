@@ -1,5 +1,6 @@
 import os
 from re import L
+from tkinter import E
 from turtle import pd
 
 import numpy as np
@@ -71,15 +72,16 @@ def patient_score(data_path):
     is_first = True
     patient_list = []
     for file_name in os.listdir(data_path):
-        if "~" not in file_name and "BoxInfo" not in file_name and "Patient" not in file_name:
+        if "~" not in file_name and "Slice_" in file_name and "Patient" not in file_name:
             print(f"{file_name} Patient analysis....")
             excel = pd.read_excel(f"{data_path}{file_name}")
-            target_list = list(excel.columns[7:])
+            target_list = list(excel.columns[8:])
             target_num = len(target_list)
             target_list.insert(0, 'Patient')
     
             if is_first:
-                is_first = False
+                # is_first = False
+                patient_list = []
                 for num in range(len(excel["Patient"])):
                     patient_list.append(excel["Patient"][num].split("_")[1])
                 patient_list = sorted(set(patient_list))
@@ -87,7 +89,7 @@ def patient_score(data_path):
             name = file_name.split('_')
 
             path_excel_result = data_path + 'Patient_'
-            for n_idx in range(1, len(name)):
+            for n_idx in range(0, len(name)):
                 path_excel_result += name[n_idx] + '_'
             path_excel_result = path_excel_result[:-1]
             wb_result = openpyxl.Workbook()
@@ -123,8 +125,8 @@ def patient_score_boxinfo(data_path):
     is_first = True
     patient_list = []
     for file_name in os.listdir(data_path):
-        if "~" not in file_name and "BoxInfo" in file_name and "Patient" not in file_name:
-            print(f"{file_name} Patient analysis....")
+        if "~" not in file_name and "BoxInfo_" in file_name and "Patient" not in file_name:
+            print(f"{file_name} Patient Box analysis....")
             excel = pd.read_excel(f"{data_path}{file_name}")
             target_list = []
             for col in range(len(list(excel.columns))):
@@ -134,7 +136,8 @@ def patient_score_boxinfo(data_path):
             target_list.insert(0, 'Patient')
     
             if is_first:
-                is_first = False
+                # is_first = False
+                patient_list = []
                 for num in range(len(excel["Patient"])):
                     patient_list.append(excel["Patient"][num].split("_")[1])
                 patient_list = sorted(set(patient_list))
@@ -142,7 +145,7 @@ def patient_score_boxinfo(data_path):
             name = file_name.split('_')
 
             path_excel_result = data_path + 'Patient_'
-            for n_idx in range(1, len(name)):
+            for n_idx in range(0, len(name)):
                 path_excel_result += name[n_idx] + '_'
             path_excel_result = path_excel_result[:-1]
             wb_result = openpyxl.Workbook()
@@ -189,6 +192,224 @@ def cal_cutgt(ori_gt, cut_land):
 
     return cut_gt, [ratio_x, ratio_y]
 
+def s2_results(dir_excel):
+    print(f"{dir_excel} results analysis....")
+
+    results_excel = f"{dir_excel[:-5]}_results.xlsx"
+ 
+    patient_list = []
+    slice_list = []
+    is_nomral_list_pd = []
+    is_normal_list_gt = []
+    score_list = []
+    excel = pd.read_excel(f"{dir_excel}")
+    cur_slice = excel["Slice"][0][:-2]
+    pre_slice = 'pre'
+    max_score = 0
+    pd_marks = []
+    results_list = []
+    Is_last = False
+    Is_Frist = False
+    iou_list = []
+    dice_list = []
+    recall_list = []
+    preci_list = []
+    iou_list_con = []
+    dice_list_con = []
+    recall_list_con = []
+    preci_list_con = []
+    for num in range(len(excel["Patient"])): 
+        slice_idx = excel["Slice"][num]
+        slice_num = slice_idx[:-2]
+        if excel["Slice"][0][:-2] != excel["Slice"][1][:-2]:
+            Is_Frist = True
+        # if cur_slice == 'start':
+        #     slice_list.append(cur_slice)
+        #     patient_list.append(patient)
+        pd_marks = float(excel["Pred 2"][num].split(',')[0])
+       
+        if slice_num != cur_slice: 
+            slice_list.append(cur_slice)
+            patient_list.append(patient)
+            is_normal_list_gt.append(excel["Is_Normal"][num-1])
+            score_list.append(max_score)
+            max_score = 0
+            is_normal = "O"
+            for r_num in range(len(results_list)):
+                if results_list[r_num] > 1:
+                    is_normal = "X"
+            
+            results_list = []
+            is_nomral_list_pd.append(is_normal)
+
+            iou_list.append(np.mean(iou_list_con))
+            dice_list.append(np.mean(dice_list_con))
+            recall_list.append(np.mean(recall_list_con))
+            preci_list.append(np.mean(preci_list_con))
+            iou_list_con = []
+            dice_list_con = []
+            recall_list_con = []
+            preci_list_con = []
+            
+            cur_slice = slice_num
+            if num == (len(excel["Patient"])-1):
+                Is_last = True
+                slice_list.append(cur_slice)
+                patient_list.append(patient)
+                results_list.append(pd_marks)
+                is_normal_list_gt.append(excel["Is_Normal"][num])
+                # score = float(excel["Score_1st"][num])
+                score_list.append(float(excel["Score_1st"][num]))
+                iou_list.append(float(excel["IoU"][num]))
+                dice_list.append(float(excel["Dice"][num]))
+                recall_list.append(float(excel["Recall"][num]))
+                preci_list.append(float(excel["Precision"][num]))
+                # max_score = 0
+                is_normal = 'O'
+                for r_num in range(len(results_list)):
+                    if results_list[r_num] > 1:
+                        is_normal = 'X'
+                results_list = []
+                is_nomral_list_pd.append(is_normal)
+                cur_slice = slice_num
+        results_list.append(pd_marks)
+        score = float(excel["Score_1st"][num])
+        patient = excel["Patient"][num] 
+        iou_list_con.append(float(excel["IoU"][num]))
+        dice_list_con.append(float(excel["Dice"][num]))
+        recall_list_con.append(float(excel["Recall"][num]))
+        preci_list_con.append(float(excel["Precision"][num]))
+        # print(f"{patient} // {slice_num} / {cur_slice} // {max_score} / {score}")
+        # if num == 20:
+        #     exit()
+        if max_score < score:
+            max_score = score
+        if num == (len(excel["Patient"])-1) and not Is_last:
+            slice_list.append(cur_slice)
+            patient_list.append(patient)
+            is_normal_list_gt.append(excel["Is_Normal"][num])
+            score_list.append(max_score)
+            max_score = 0
+            iou_list.append(np.mean(iou_list_con))
+            dice_list.append(np.mean(dice_list_con))
+            recall_list.append(np.mean(recall_list_con))
+            preci_list.append(np.mean(preci_list_con))
+            iou_list_con = []
+            dice_list_con = []
+            recall_list_con = []
+            preci_list_con = []
+            is_normal = 'O'
+            for r_num in range(len(results_list)):
+                if results_list[r_num] > 1:
+                    is_normal = 'X'
+                    # print(cur_slice)
+            results_list = []
+            is_nomral_list_pd.append(is_normal)
+            cur_slice = slice_num
+        
+    # patient_list = set(patient_list)
+    # print(slice_list)
+    # print(is_nomral_list)
+    # print(patient_list)
+    # print(len(patient_list), len(slice_list), len(is_normal_list_gt), len(is_nomral_list_pd))
+    wb_result = openpyxl.Workbook()
+    worksheet = wb_result.active
+    worksheet.append(['Patient', 'Slice', 'GT_Nomral', 'PD_Normal', 'IoU', 'Dice', 'Recall', 'Precision', 'Score'])
+    wb_result.save(results_excel)
+
+    s2_num = len(patient_list)
+    s2_t_num = 0
+    s2_n_num = 0
+    s2_t_num_acc = 0
+    s2_n_num_acc = 0
+    wb_eval = openpyxl.load_workbook(results_excel)
+    ws = wb_eval.active
+    for s in range(len(patient_list)):
+        reulst_list = [patient_list[s], slice_list[s], is_normal_list_gt[s], is_nomral_list_pd[s], iou_list[s], dice_list[s], recall_list[s], preci_list[s], score_list[s]]
+        ws.append(reulst_list)
+        if is_normal_list_gt[s] == "O":
+            s2_n_num += 1
+            if is_nomral_list_pd[s] == "O":
+                s2_n_num_acc += 1
+        else:
+            s2_t_num += 1
+            if is_nomral_list_pd[s] == "X":
+                s2_t_num_acc += 1
+    wb_eval.save(results_excel)
+    # print(s2_num, s2_t_num, s2_n_num)
+    # print(s2_t_num_acc, s2_n_num_acc)
+
+    print("Patient Analysis Finish")
+    return s2_num, s2_t_num, s2_n_num, s2_t_num_acc, s2_n_num_acc
+
+def s2_results_normal(dir_excel):
+    results_excel = f"{dir_excel[:-5]}_results.xlsx"
+ 
+    excel = pd.read_excel(f"{dir_excel}")
+    patient_list = []
+    slice_list = []
+    score_list = []
+    gt_1_list = []
+    gt_2_list = []
+    pd_1_list = []
+    pd_2_list = []
+
+    iou_list = []
+    dice_list = []
+    recall_list = []
+    preci_list = []
+    speci_list = []
+    for num in range(len(excel["Patient"])): 
+        patient_list.append(excel["Patient"][num])
+        slice_list.append(excel["Slice"][num])
+        gt_1_list.append(excel["GT 1"][num])
+        gt_2_list.append(excel["GT 2"][num])
+        if int(excel['Pred 2'][num][0]) == 1:
+            pd_1_list.append(excel['Pred 1'][num])
+            pd_2_list.append(excel['Pred 2'][num])
+        else:
+            pd_1_x = int(excel['Pred 1'][num].split(',')[0]) * 2
+            pd_1_y = int(excel['Pred 1'][num].split(',')[1:]) * 2
+            pd_2_x = int(excel['Pred 2'][num].split(',')[0]) * 2
+            pd_2_y = int(excel['Pred 2'][num].split(',')[1:]) * 2
+
+            gt = [[0,0],[1,1]]
+            pd = [[pd_1_x, pd_1_y],[pd_2_x, pd_2_y]]
+            TP, FP, TN, FN = cal_score(gt, pd, (512, 512))
+            iou, dice, specitificity, sensitivity, precision = Cal_Result(TP, FP, TN, FN)
+            iou_list.append(iou)
+            dice_list.append(dice)
+            speci_list.append(specitificity)
+            recall_list.append(sensitivity)
+            preci_list.append(precision)
+            pd_1_list.append(f"{pd_1_x}, {pd_1_y}")
+            pd_2_list.append(f"{pd_2_x}, {pd_2_y}")
+
+        
+    wb_result = openpyxl.Workbook()
+    worksheet = wb_result.active
+    worksheet.append(['Patient', 'Slice', 'GT_Nomral', 'PD_Normal', 'IoU', 'Dice', 'Recall', 'Precision', 'Score'])
+    wb_result.save(results_excel)
+
+    s2_num = len(patient_list)
+    s2_t_num = 0
+    s2_n_num = 0
+    s2_t_num_acc = 0
+    s2_n_num_acc = 0
+    wb_eval = openpyxl.load_workbook(results_excel)
+    ws = wb_eval.active
+    for s in range(len(patient_list)):
+        reulst_list = [patient_list[s], slice_list[s], is_normal_list_gt[s], is_nomral_list_pd[s], iou_list[s], dice_list[s], recall_list[s], preci_list[s], score_list[s]]
+        ws.append(reulst_list)
+        if is_normal_list_gt[s] == "O":
+            s2_n_num += 1
+            if is_nomral_list_pd[s] == "O":
+                s2_n_num_acc += 1
+        else:
+            s2_t_num += 1
+            if is_nomral_list_pd[s] == "X":
+                s2_t_num_acc += 1
+    wb_eval.save(results_excel)
 def detradd_net(save_dir, name_dir, network, device, input_tensor_cpu, gt_landmarks_cpu, detr_out, select_boxes, box_score_choice, cut_landmarks, number_list, pred_shape, is_save, is_o2, is_multi):   
     batch_size = input_tensor_cpu.shape[0]
     
@@ -582,7 +803,7 @@ def save_result_image(save_dir, name_dir, input_tensor_cpu, gt_landmarks_cpu, pr
     plt.savefig(f"{save_dir}/HMap2_G/HMap2_G_{name_dir}.jpg")
     plt.close()
 
-def save_result_image_cut(save_npz_dir, save_img_dir, name_dir, input_tensor_cpu, gt_landmarks_cpu, cut_landmarks, number_list, is_save, multislice, save_npz=True):   
+def save_result_image_cut(save_npz_dir, save_img_dir, name_dir, input_tensor_cpu, gt_landmarks_cpu, cut_landmarks, number_list, is_save, multislice, epoch, save_npz=True):   
     batch_size = input_tensor_cpu.shape[0]
     
     ## Get & Save Cut Data
@@ -590,6 +811,7 @@ def save_result_image_cut(save_npz_dir, save_img_dir, name_dir, input_tensor_cpu
     cut_nums = []
     cut_gts = []
     ori_pds = []
+ 
     if save_npz:
         for num in range(batch_size):
             if multislice:
@@ -598,23 +820,24 @@ def save_result_image_cut(save_npz_dir, save_img_dir, name_dir, input_tensor_cpu
                 ori_img = input_tensor_cpu[num][0]
             cut = cut_landmarks[num] 
             cut_img = ori_img[cut[1]:cut[1]+(cut[3]-cut[1]), cut[0]:cut[0]+(cut[2]-cut[0])]
-            cut_img = cv2.resize(cut_img, dsize=(128,128), interpolation=cv2.INTER_AREA)
-            if cut[2] > 50:
-                cut_imgs.append(cut_img)
-                cut_nums.append(number_list[num])
-                cut_gt, _= cal_cutgt(gt_landmarks_cpu[num], cut)
-                cut_gt = landmark_exception_cut(cut_gt)
-                cut_gts.append(cut_gt)
-                ori_pds.append(cut)
-                
-                if cut_gt[0][0] < 0:
-                    print(number_list[num])
-                    print(cut_gt)
-                    exit()
-                npz_name = f"{save_npz_dir}{number_list[num]}.npz"
-                np.savez_compressed(npz_name, cut_img = cut_img, number = number_list[num], cut_gt=cut_gt, ori_img = ori_img, ori_gt = gt_landmarks_cpu[num], cut_mark = cut)
+            if cut_img is not None:
+                if cut[2] > 50:
+                    cut_img = cv2.resize(cut_img, dsize=(128,128), interpolation=cv2.INTER_AREA)
+                    cut_imgs.append(cut_img)
+                    cut_nums.append(number_list[num])
+                    cut_gt, _= cal_cutgt(gt_landmarks_cpu[num], cut)
+                    cut_gt = landmark_exception_cut(cut_gt)
+                    cut_gts.append(cut_gt)
+                    ori_pds.append(cut)
+                    
+                    if cut_gt[0][0] < 0:
+                        print(number_list[num])
+                        print(cut_gt)
+                        exit()
+                # npz_name = f"{save_npz_dir}{number_list[num]}.npz"
+                # np.savez_compressed(npz_name, cut_img = cut_img, number = number_list[num], cut_gt=cut_gt, ori_img = ori_img, ori_gt = gt_landmarks_cpu[num], cut_mark = cut)
     ## IMG Save
-    if is_save:
+    if is_save and batch_size >= 8:
         if batch_size > 8:
             batch_size = 8
         fig_col = int(batch_size/2)
@@ -669,24 +892,27 @@ def save_result_image_cut(save_npz_dir, save_img_dir, name_dir, input_tensor_cpu
         plt.tight_layout()
         plt.subplots_adjust(left = 0, bottom = 0, right = 1, top = 1, hspace = 0.1, wspace = 0.1)
         plt.margins(0,0)
-        plt.savefig(f"{save_img_dir}Cut_{name_dir}.jpg")
+        plt.savefig(f"{save_img_dir}Cut_E{epoch}_{name_dir}.jpg")
         plt.close()
 
     return cut_imgs, cut_nums, cut_gts, ori_pds
 
 def create_box(boxes_cpu, scores_cpu, th, box_usenum, shape_x, shape_y):
+    zero_range = 80
+    if int(shape_x) == 256:
+        zero_range = 0
     min_x = shape_x
     min_y = shape_y
     max_x = 0
     max_y = 0
     select_boxes = []
-    zero_img = np.zeros((512, 512))
+    zero_img = np.zeros((shape_x, shape_y))
     add_input_channel = len(boxes_cpu)
     if add_input_channel >= (box_usenum+1):
         add_input_channel = box_usenum
     zero_box_count = 0
     for bbnum in range(add_input_channel):
-        if boxes_cpu[bbnum][2] < 80 or boxes_cpu[bbnum][2] < 80:
+        if boxes_cpu[bbnum][2] < zero_range or boxes_cpu[bbnum][2] < zero_range:
             zero_box_count += 1 
     for bbnum in range(add_input_channel):
         select_boxes.append(landmark_exception(boxes_cpu[bbnum]))
@@ -697,7 +923,7 @@ def create_box(boxes_cpu, scores_cpu, th, box_usenum, shape_x, shape_y):
                         if bbnum == 0:
                             zero_img[x][y] += scores_cpu[bbnum]
                         else:
-                            if x >= 80 and y >= 80:
+                            if x >= zero_range and y >= zero_range:
                                 zero_img[x][y] += scores_cpu[bbnum]
                             else:
                                 if zero_box_count > (add_input_channel/2):
@@ -764,3 +990,199 @@ def calculate_box_score(box_usenum, create_box, pred_boxes, pred_scores, number_
             score_list.append(pred_score)
             score_weight_list.append(0)
     return box_list, score_list, score_weight_list, select_score_list, select_score_weight_list
+
+def get_include_landmarks(dir_data, patient, target_slice_num, pd_landmarks):
+    patient_txt = f"{patient}.txt"
+    target_slice = target_slice_num
+    min_x = pd_landmarks[0][0]
+    min_y = pd_landmarks[0][1]
+    max_x = pd_landmarks[1][0]
+    max_y = pd_landmarks[1][1]
+    
+    with open(f"{dir_data}{patient_txt}", 'r') as txt_colon:
+        lines = txt_colon.readlines()
+        is_first = False
+        start_idx = 0
+        end_idx = 0
+        is_include = False
+        contour_c_num_pre = 0
+        for line in lines:
+            slice_idx = int(line.split(',')[0])
+            if slice_idx == target_slice:
+                if not is_first:
+                    is_first = True
+                    start_idx = lines.index(line)
+                    contour_t_num = int(line.split(',')[1][1:])
+                    is_over_contour = [False for i in range(contour_t_num)]
+               
+                contour_c_num = int(line.split(',')[2][1:])
+                if contour_c_num_pre != contour_c_num:
+                    contour_c_num_pre = contour_c_num
+                    over_count = 0
+                contour_x = int(line.split(',')[3][1:])
+                contour_y = int(line.split(',')[4][:-2])
+                
+                for p_x in range(min_x, max_x):
+                    for p_y in range(min_y, max_y):
+                        if contour_x == p_x and contour_y == p_y:
+                            is_over_contour[contour_c_num-1] = True
+                            break
+                        # if contour_x == p_x and contour_y == p_y:
+                        #     over_count += 1     
+                        #     break         
+                        # if over_count == 10:
+                        #     is_over_contour[contour_c_num-1] = True
+                        #     break
+            elif slice_idx != target_slice and is_first:
+                end_idx = lines.index(line)
+                break
+        if end_idx == 0:
+            end_idx = start_idx + 1
+        zero_img = np.zeros(shape=(512, 512))
+        try:
+            for t_idx in range(start_idx, end_idx):
+                contour_c_num = int(lines[t_idx].split(',')[2][1:])
+                contour_x = int(lines[t_idx].split(',')[3][1:])
+                contour_y = int(lines[t_idx].split(',')[4][:-2])
+                is_over = is_over_contour[contour_c_num-1]
+                if is_over:
+                    zero_img[contour_y][contour_x] = 1
+            
+            min_x = 511
+            min_y = 511
+            max_x = 0
+            max_y = 0     
+            for j in range(zero_img.shape[0]):
+                for k in range(zero_img.shape[1]):
+                    if zero_img[j][k] > 0:
+                        if j < min_y:
+                            min_y = j
+                        if k < min_x:
+                            min_x = k
+                        if j > max_y:
+                            max_y = j
+                        if k > max_x:
+                            max_x = k
+
+            if min_x == 511:
+                min_x = 0
+                min_y = 0
+                max_x = 1
+                max_y = 1
+        except:
+            print('')
+            print(patient)
+            print(target_slice)
+            print(start_idx)
+            print(int(lines[start_idx].split(',')[0]))
+            print(end_idx)
+    
+    return [[[min_x, min_y], [max_x, max_y]]], 1
+
+def get_noraml_landmarks(dir_data, patient, target_slice_num):
+    patient_txt = f"{patient}.txt"
+    target_slice = target_slice_num
+    min_x = 0
+    min_y = 0
+    max_x = 1
+    max_y = 1
+    contour_t_num = 0
+    with open(f"{dir_data}{patient_txt}", 'r') as txt_colon:
+        lines = txt_colon.readlines()
+        is_first = False
+        start_idx = 0
+        end_idx = 1
+        over_count = 0
+        contour_c_num_pre = 0
+        
+        for line in lines:
+            slice_idx = int(line.split(',')[0])
+            if slice_idx == target_slice:
+                if not is_first:
+                    is_first = True
+                    start_idx = lines.index(line)
+                    contour_t_num = int(line.split(',')[1][1:])
+                    # if "2010_0396" in patient_txt and 87 == target_slice:
+                    #     print(contour_t_num)
+                    #     print(line)
+                    #     exit()
+                    is_over_contour = [False for i in range(contour_t_num)]
+               
+                contour_c_num = int(line.split(',')[2][1:])
+                if contour_c_num_pre != contour_c_num:
+                    contour_c_num_pre = contour_c_num
+                    over_count = 0
+                contour_x = int(line.split(',')[3][1:])
+                contour_y = int(line.split(',')[4][:-2])
+                
+                # for p_x in range(min_x, max_x):
+                #     for p_y in range(min_y, max_y):
+                #         if contour_x == p_x and contour_y == p_y:
+                #             over_count += 1     
+                #             break         
+                #         if over_count == 10:
+                #             is_over_contour[contour_c_num-1] = True
+                #             break
+            elif slice_idx != target_slice and is_first:
+                end_idx = lines.index(line)
+                break
+       
+        # contour_t_num = int(lines[start_idx].split(',')[1][1:])
+        contour_c_num_pre = 1
+        is_first = False
+        min_x = 511
+        min_y = 511
+        max_x = 0
+        max_y = 0  
+        contour_list = []
+        try:
+            if end_idx > 1:
+                for t_idx in range(start_idx, end_idx):
+                    contour_c_num = int(lines[t_idx].split(',')[2][1:])
+                    # if contour_c_num_pre != contour_c_num and not is_first:
+                    #     contour_c_num_pre = contour_c_num
+                    #     is_first = True
+                    if contour_c_num_pre != contour_c_num:
+                        contour_c_num_pre = contour_c_num
+                        contour_list.append([[min_x, min_y],[max_x, max_y]])
+                        min_x = 511
+                        min_y = 511
+                        max_x = 0
+                        max_y = 0  
+                    contour_x = int(lines[t_idx].split(',')[3][1:])
+                    contour_y = int(lines[t_idx].split(',')[4][:-2])
+                    if contour_y < min_y:
+                        min_y = contour_y
+                    if contour_x < min_x:
+                        min_x = contour_x
+                    if contour_y > max_y:
+                        max_y = contour_y
+                    if contour_x > max_x:
+                        max_x = contour_x
+                    
+                    if t_idx == (end_idx-1):
+                        contour_list.append([[min_x, min_y],[max_x, max_y]])
+            else:
+                contour_list.append([[0, 0],[1, 1]])
+        except:
+            print("")
+            print(patient)
+            print(target_slice_num)
+            print(int(lines[start_idx].split(',')[0]))
+            print(start_idx)
+            print(end_idx)
+    
+    return contour_list, contour_t_num
+
+if __name__ == "__main__":
+    dir_data = "Y:/yskim/BoundingBox/result/DT1014_Q9_C2_BR101_R101_NB08_UB4_Square_Contour_Com/Val_S/Epoch_22/"
+    s2_results(f"{dir_data}Slice_s2_Val_DT1014_Q9_C2_BR101_R101_NB08_UB4_Square_Contour_22.xlsx")
+    # s2_results_normal(f"{dir_data}Slice_Val_G_DT1014_Q9_C2_BR101_R101_NB08_UB4_Square_Contour_29_s2_copy.xlsx")
+    # dir_data = "Y:/yskim\BoundingBox/result/240314_14h14m_Val_G_DT1011_Q9_C2_BR101_R101_NB08_UB4_Square_Contour_Demo/Epoch_17/"
+    # s2_results(f"{dir_data}Slice_Val_G_DT1011_Q9_C2_BR101_R101_NB08_UB4_Square_Contour_17_s2.xlsx")
+    # gt_segmark = [[166,132],[232,211]]
+    # pred_landmarks = [[382,223],[442,277]]
+    # shape_x = 512
+    # shape_y = 512
+    # TP ,_, _, _ = cal_score(gt_segmark, pred_landmarks, (shape_x, shape_y))
+    # print(TP)
