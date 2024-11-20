@@ -53,11 +53,11 @@ def get_args_parser():
     Computer = ""
     Batch_Size = 16
     Num_Epoch = 30
-    Nas_Mount = "Y:/" 
+    Nas_Mount = "C:/" 
     Data_Mount = "D:/" 
     Demo = ''
-    DIR_DATA = f"{Data_Mount}yskim/BoundingBox/data/processed/LN_201014_HU/"
-    # DIR_DATA = f"{Data_Mount}yskim/BoundingBox/data/processed/LN_2014_HU/"
+    DIR_DATA = f"../BoundingBox/data/processed/LN_201014_HU/"
+
     if "3060" in gpu_info:
         Computer = "Test"
         # Computer = "Demo"
@@ -68,25 +68,24 @@ def get_args_parser():
         # Val_Epoch_early = 3
         Demo = "_tmp"
         Data_Mount = "Y:/" 
-        DIR_DATA = f"{Data_Mount}yskim/BoundingBox/data/processed/tmp/"
+        DIR_DATA = f"../BoundingBox/data/processed/tmp/"
     elif "3090" in gpu_info:
         Computer = "Com"
     else:
         print(f"Check this PC GPU = {gpu_info}")
         exit()
 
-    DIR_RESULT_PARENT = f"{Nas_Mount}yskim/BoundingBox/result/"    
-    DIR_DATA_TRAIN = f"{DIR_DATA}train/" 
-    DIR_DATA_TEST = f"{DIR_DATA}test/" 
-    DIR_DATA_SEG = f"{Data_Mount}yskim/BoundingBox/data/raw/Colorectal/Fast_colon/"
-    DIR_DATA_SEG_Contour = f"{Data_Mount}yskim/BoundingBox/data/raw/Colorectal/Fast_colon_contour/"
-    # DIR_DATA_SEG = f"{Data_Mount}yskim/BoundingBox/data/raw/Colorectal/2014_Fast_colon/"
-    # DIR_DATA_SEG_Contour = f"{Data_Mount}yskim/BoundingBox/data/raw/Colorectal/2014_Fast_colon_contour/"
+    DIR_RESULT_PARENT = f"../yskim/BoundingBox/result/"    
+    DIR_DATA_TRAIN = f"../train/" 
+    DIR_DATA_TEST = f"../test/" 
+    DIR_DATA_SEG = f"../BoundingBox/data/raw/Colorectal/Fast_colon/"
+    DIR_DATA_SEG_Contour = f"../BoundingBox/data/raw/Colorectal/Fast_colon_contour/"
+
     dir_data_split = DIR_DATA.split('_')
 
     DIR_DATA_5Slice = None
     ## train path
-    # DIR_DATA_5Slice = f"{Data_Nas}yskim/BoundingBox/data/processed/LN2_20All_HU_5slice/"
+    # DIR_DATA_5Slice = f"../BoundingBox/data/processed/LN2_20All_HU_5slice/"
 
     PATH_PRETRAINED = None
     check_path = "240612_20h40m_DT1014_Q9_C2_BR101_R101_NB08_UB4_Square_Contour_V3_Com/"
@@ -109,11 +108,7 @@ def get_args_parser():
             Data_Year = year
     Data_Year = Data_Year[2:]  
     Pretrain_model = "detr-r101-dc5.pth"
-    # Pretrain_model = None
     Back_bone = 'resnet101'
-    # Back_bone = 'resnet50'
-    # DIR_RocoResnet = f"{Nas_Mount}yskim/BoundingBox/result/Roco_Resnet101_Pretrained_Com_3090/CheckPoint/net_93.pt"
-    DIR_RocoResnet = f"{Nas_Mount}yskim/BoundingBox/result/Roco_Resnet101_DT_3CH_Com_3090/CheckPoint/net_93.pt"
 
     multi_slice = ''
     if DIR_DATA_5Slice is not None:
