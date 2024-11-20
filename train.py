@@ -253,40 +253,14 @@ def main(args):
     
     model.to(device)
     model_2.to(device)
-    # print(model.backbone)
-    # for k in model.backbone:
-        # print(k.body)
-        # path_model = "Y:/yskim/BoundingBox/code/DETR/res_detr-r101-dc5.pth"
-        # torch.save({'model_state_dict':k.body.state_dict()}, path_model)
-        # exit()
-    ####
-    # dtpt = torch.load(args.rocoresnet_dir , map_location=device)
-    # list_check = list(dtpt['model_state_dict'].items())
-    # del_list = []
-    # list_check_body = []
-    # for i in range(len(list_check)):
-    #     if "fc." not in list_check[i][0]:
-    #         # del_list.append(f"0.body.{list_check[i]}") 
-    #         # del_list.append(f"{list_check[i]}")
-    #         list_check_body.append((f"0.body.{list_check[i][0]}",list_check[i][1])) 
-    #     # else:
-    #     #     list_check_body.append((f"0.body.{list_check[i][0]}",list_check[i][1]))
-    # load_check = list_check_body
-    # load_check = dict(load_check)
-    # model.backbone.load_state_dict(load_check)
-    # print("ROCO Resnet load")
 
     model_without_ddp = model
     model_without_ddp_2 = model_2
-    # if args.distributed:
-    #     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-    #     model_without_ddp = model.module
     
     ## 총 파라메터 갯수 계산 하는 방법
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad) 
     # print('number of params:', n_parameters)
 
-    ## backbone / Transformer-encoder, decoder / detector head 각각의 learning rate를 다르게 주는 방법
     param_dicts = [
         {"params": [p for n, p in model_without_ddp.named_parameters() if "backbone" not in n and p.requires_grad]},
         {
